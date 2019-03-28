@@ -7,7 +7,6 @@ Created on Thu Mar 28 00:37:12 2019
 import numpy as np
 import math
 from scipy.fftpack import dct
-from scipy.io import wavfile
 
 def mel2hz(value):
     return 700 * (10**(value/2595.0) - 1)
@@ -86,9 +85,5 @@ def mfcc_extractor(data, fs, win_ratio=0.025, overlap_ratio=0.015, num_filter=26
         tmp[0] = np.log(energy)
                 
         result.append(tmp)
-        
-    print(result[0])
-fs, data = wavfile.read('../data/first.wav')
-mfcc_extractor(data,fs)
     
-#createMelFilterbank(16000, 257, 26, 0, 8000)
+    return result
