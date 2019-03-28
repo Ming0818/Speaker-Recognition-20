@@ -86,4 +86,4 @@ def mfcc_extractor(data, fs, win_ratio=0.025, overlap_ratio=0.015, num_filter=26
                 
         result.append(tmp)
     
-    return result
+    return np.array(result)
