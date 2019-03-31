@@ -9,7 +9,6 @@ from MFCCExtractor import mfcc_extractor
 from GMModel import gm_model
 from scipy.io import wavfile
 from sklearn.mixture import GaussianMixture
-from algorithm import GMM
 import numpy as np
 
 gm_models = []
@@ -63,6 +62,9 @@ for i in range(len(label)):
             if (gm_models_sklean[ii].score(f) > max_score_1):
                 max_score_1 = gm_models_sklean[ii].score(f)
                 idx1 = ii       
+        
+        print(max_score)
+        print(max_score_1)
         
         if (idx == i):
             num_true += 1
