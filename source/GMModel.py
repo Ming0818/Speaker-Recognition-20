@@ -36,7 +36,7 @@ class gm_model:
         self.max_iter = max_iter
    
     def gmm_init_kmeans(self, data):
-        label = (KMeans(self.n_componens)).fit(data).labels_
+        label = (KMeans(self.n_componens, random_state=999)).fit(data).labels_
         clusters = []
         for i in range(self.n_componens):
             sub_data = data[label == i]
@@ -80,7 +80,7 @@ class gm_model:
             likelihood = np.sum(np.log(self.pdf(data)))
             
             print('GMM it = {}, log_likehood = {}'.format(step + 1, likelihood))            
-            if (likelihood - log_likelihood[-1] < self.tol):
+            if (np.absolute(likelihood - log_likelihood[-1]) < self.tol):
                 break
             else:
                 log_likelihood.append(likelihood)                
@@ -96,10 +96,10 @@ class gm_model:
         return result
     
     def score(self, data):
-        return np.sum(self.pdf(data)) / len(data)
+        return np.sum(np.log(self.pdf(data))) / len(data)
     
-model = gm_model(n_components=2, min_covar=1e-4, max_iter=100)
-data = np.array([[1,2,3],[1,2,3], [1.1, 2.1, 3.1], [3,4,5], [3,4,5]])
-model.fit(data)
+#model = gm_model(n_components=2, min_covar=1e-4, max_iter=100)
+#data = np.array([[1,2,3],[1,2,3], [1.1, 2.1, 3.1], [3,4,5], [3,4,5]])
+#model.fit(data)
     
 #print(model.score(data))
