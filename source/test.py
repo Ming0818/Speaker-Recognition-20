@@ -7,16 +7,22 @@ Created on Thu Mar 28 23:44:51 2019
 
 from MFCCExtractor import mfcc_extractor
 from GMModel import gm_model
+from GM_UBModel import gmmubm_model
 from scipy.io import wavfile
 from sklearn.mixture import GaussianMixture
 import numpy as np
+import pickle
+import os
 
 gm_models = []
 gm_models_sklean = []
 label = [ '1', '2', '3', '4', '5' ]
 
-train_words = [ 'coffee', 'hello', 'laptop', 'mobile', 'music' ]
-test_words = [ 'speech' ]
+train_words = [ 'coffee', 'hello', 'laptop', 'mobile', 'music', 'speech' ]
+test_words = train_words
+
+ubm_data = []
+all_data = {}
 
 for i in label:    
     data = []
@@ -24,54 +30,47 @@ for i in label:
         url = '../data/train/{}/{}.wav'.format(i,j)
         fs,x = wavfile.read(url)
         f = mfcc_extractor(x, fs, maxHz = fs / 2)
+        
         if (len(data) == 0):
             data = f
         else:
             data = np.concatenate((data,f), axis = 0)
     
-    gmm = gm_model(n_components=6)
-    gmm.fit(data)
-    gm_models.append(gmm)
+        if (len(ubm_data) == 0):
+            ubm_data = f
+        else:
+            ubm_data = np.concatenate((ubm_data, f), axis = 0)
 
-    gmm = GaussianMixture(n_components=6, random_state=999)
-    gmm.fit(data)
-    gm_models_sklean.append(gmm)
+    all_data.update({i:data})
 
+    # build background model
+ubm_model_direct = 'ubmodel.mat'
+if os.path.isfile(ubm_model_direct):
+    filehandler = open(ubm_model_direct, 'rb')
+    ub_gm_model = pickle.load(filehandler)
+    filehandler.close()
+else:
+    ub_gm_model = gmmubm_model(n_components=6, max_iter=1000)
+    ub_gm_model.fit_ubm(ubm_data)   
+    filehandler = open(ubm_model_direct, 'wb')
+    pickle.dump(ub_gm_model, filehandler)
+    filehandler.close()
 
-num_case = len(label) * len(test_words)
+    # adapt MAP    
+for i in all_data:
+    ub_gm_model.fit_gmm(i, all_data[i])
+    
+num_test = len(label) * len(test_words)
 num_true = 0
-num_true_sklearn = 0
 
-for i in range(len(label)):    
-    data = []
+    # test
+for i in label:    
     for j in test_words:
-        url = '../data/train/{}/{}.wav'.format(label[i],j)
+        url = '../data/train/{}/{}.wav'.format(i,j)
         fs,x = wavfile.read(url)
         f = mfcc_extractor(x, fs, maxHz = fs / 2)
         
-        max_score = -np.Inf
-        idx = -1
-        
-        max_score_1 = -np.Inf
-        idx1 = -1
-        for ii in range(len(gm_models)):
-            if (gm_models[ii].score(f) > max_score):
-                max_score = gm_models[ii].score(f)
-                idx = ii                
-            
-            if (gm_models_sklean[ii].score(f) > max_score_1):
-                max_score_1 = gm_models_sklean[ii].score(f)
-                idx1 = ii       
-        
-        print(max_score)
-        print(max_score_1)
-        
-        if (idx == i):
+        if (ub_gm_model.predict(f) == i):
             num_true += 1
             
-        if (idx1 == i):
-            num_true_sklearn += 1
-            
-
-print('model: {}'.format(num_true/num_case))
-print('sklearn model: {}'.format(num_true_sklearn/num_case))
+print('Accuracy = {}'.format(num_true/num_test))

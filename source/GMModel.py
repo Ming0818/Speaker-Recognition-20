@@ -9,6 +9,7 @@ from MFCCExtractor import mfcc_extractor
 from sklearn.cluster import KMeans
 from scipy.stats import multivariate_normal as mvnpdf
 import numpy as np
+import copy
 
 class gm_cluster:
     def __init__(self, prior, data, min_covar):
@@ -44,7 +45,10 @@ class gm_model:
                                        self.min_covar))
         return clusters
     
-    def e_step(self, data):
+    def clone(self):
+        return copy.deepcopy(self)
+    
+    def e_step(self, data):             
         N = len(data)
         detail = np.zeros((N, self.n_componens))
         for i in range(N):
