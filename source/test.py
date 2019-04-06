@@ -18,8 +18,8 @@ gm_models = []
 gm_models_sklean = []
 label = [ '1', '2', '3', '4', '5' ]
 
-train_words = [ 'coffee', 'hello', 'laptop', 'mobile', 'music', 'speech' ]
-test_words = train_words
+train_words = [ 'coffee', 'hello', 'laptop', 'mobile', 'music' ]
+test_words =  [ 'speech' ]
 
 ubm_data = []
 all_data = {}
@@ -58,7 +58,7 @@ else:
 
     # adapt MAP    
 for i in all_data:
-    ub_gm_model.fit_gmm(i, all_data[i])
+    ub_gm_model.enroll(i, all_data[i])
     
 num_test = len(label) * len(test_words)
 num_true = 0

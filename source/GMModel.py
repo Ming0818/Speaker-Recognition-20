@@ -11,6 +11,8 @@ from scipy.stats import multivariate_normal as mvnpdf
 import numpy as np
 import copy
 
+#Based on https://github.com/stober/gmm
+
 class gm_cluster:
     def __init__(self, prior, data, min_covar):
         self.prior = prior
@@ -70,6 +72,8 @@ class gm_model:
                 comp.covariance += detail[j,i] * np.outer(dx,dx)
             comp.covariance /= total[i]
             comp.fix_covariance()
+            #if self.covariance_type == 'diag':
+            #    comp.covariance = np.diag(comp.covariance)
             comp.prior = total[i] / N
 
         return
@@ -102,6 +106,28 @@ class gm_model:
     def score(self, data):
         return np.sum(np.log(self.pdf(data))) / len(data)
     
+    def supervector(self):
+        return None
+            
+    def mean(self):
+        mean = np.zeros((1,self.dim))
+        for i in range(self.n_componens):
+            cluster = self.clusters[i]
+            mean = mean + cluster.prior * cluster.mean
+        return mean
+    
+    def covariance(self):
+        m = self.mean()
+        s = -np.outer(m,m)
+
+        for i in range(self.n_componens):
+            cluster = self.clusters[i]
+            cm = cluster.mean
+            cvar = cluster.covariance
+            s += cluster.prior * (np.outer(cm,cm) + cvar)
+
+        return s
+        
 #model = gm_model(n_components=2, min_covar=1e-4, max_iter=100)
 #data = np.array([[1,2,3],[1,2,3], [1.1, 2.1, 3.1], [3,4,5], [3,4,5]])
 #model.fit(data)
